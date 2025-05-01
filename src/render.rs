@@ -86,3 +86,34 @@ impl Render for Element {
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use function_name::named;
+
+    #[named]
+    #[test]
+    fn beta_sub_alpha_sup_2() {
+        let alpha = Mi {
+            identifier: "α".into(),
+        };
+        let beta = Mi {
+            identifier: "β".into(),
+        };
+        let number = Mn { number: "2".into() };
+        let subscript = Msub {
+            base: Box::<Element>::new(Element::Mi(beta)),
+            subscript: Box::<Element>::new(Element::Mi(alpha)),
+        };
+        let whole = Msup {
+            base: Box::<Element>::new(Element::Msub(subscript)),
+            superscript: Box::<Element>::new(Element::Mn(number)),
+        };
+        let font_size = 100.0;
+
+        let img = whole.render(font_size, 0);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+}
