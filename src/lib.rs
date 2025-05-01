@@ -1,4 +1,5 @@
 #[allow(dead_code)]
 #[allow(unused)]
-mod mml_types;
-mod render;
+pub mod mml_types;
+pub mod render;
+pub mod text_rendering;
