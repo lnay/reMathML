@@ -3,7 +3,7 @@ use std::collections::HashMap;
 /// The root element of a MathML document
 pub struct Math {
     pub attributes: HashMap<String, String>,
-    pub content: Mrow,
+    pub content: Element,
 }
 
 /// Types of semantic elements
@@ -59,16 +59,16 @@ pub struct Mo {
     pub operator: String,
 }
 pub struct Msub {
-    pub base: Element,
-    pub subscript: Element,
+    pub base: Box<Element>,
+    pub subscript: Box<Element>,
 }
 pub struct Msup {
-    pub base: Element,
-    pub superscript: Element,
+    pub base: Box<Element>,
+    pub superscript: Box<Element>,
 }
 pub struct Mfrac {
-    pub numer: Element,
-    pub denom: Element,
+    pub numer: Box<Element>,
+    pub denom: Box<Element>,
 }
 
 // /// Represents content markup elements
