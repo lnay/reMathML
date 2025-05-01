@@ -40,22 +40,14 @@ impl Default for ColorBrush {
 
 fn main() {
     // The text we are going to style and lay out
-    let text = String::from(
-        "Some text here. Let's make it a bit longer so that line wrapping kicks in 😊. And also some اللغة العربية arabic text.\nThis is underline and strikethrough text",
-    );
+    let text = String::from("αB");
 
     // The display scale for HiDPI rendering
     let display_scale = 1.0;
 
-    // The width for line wrapping
-    let max_advance = Some(200.0 * display_scale);
-
     // Colours for rendering
     let foreground_color = Color::BLACK;
     let background_color = Color::WHITE;
-
-    // Padding around the output image
-    let padding = 20;
 
     // Create a FontContext, LayoutContext
     //
@@ -76,37 +68,19 @@ fn main() {
 
     // Set default font family
     builder.push_default(GenericFamily::SystemUi);
-    builder.push_default(StyleProperty::LineHeight(1.3));
+    // builder.push_default(StyleProperty::LineHeight(1.3));
     builder.push_default(StyleProperty::FontSize(16.0));
-
-    // Set the first 4 characters to bold
-    let bold = FontWeight::new(600.0);
-    builder.push(StyleProperty::FontWeight(bold), 0..4);
-
-    // Set the underline & strikethrough style
-    builder.push(StyleProperty::Underline(true), 141..150);
-    builder.push(StyleProperty::Strikethrough(true), 155..168);
-
-    builder.push_inline_box(InlineBox {
-        id: 0,
-        index: 40,
-        width: 50.0,
-        height: 50.0,
-    });
 
     // Build the builder into a Layout
     let mut layout: Layout<ColorBrush> = builder.build(&text);
 
     // Perform layout (including bidi resolution and shaping) with start alignment
-    layout.break_all_lines(max_advance);
-    layout.align(max_advance, Alignment::Start, AlignmentOptions::default());
+    layout.break_all_lines(None);
     let width = layout.width().ceil() as u32;
     let height = layout.height().ceil() as u32;
-    let padded_width = width + padding * 2;
-    let padded_height = height + padding * 2;
 
     // Create TinySkia Pixmap
-    let mut img = Pixmap::new(padded_width, padded_height).unwrap();
+    let mut img = Pixmap::new(width, height).unwrap();
 
     // Fill background color
     img.fill(background_color);
@@ -119,10 +93,10 @@ fn main() {
         for item in line.items() {
             match item {
                 PositionedLayoutItem::GlyphRun(glyph_run) => {
-                    render_glyph_run(&glyph_run, &mut pen, padding);
+                    render_glyph_run(&glyph_run, &mut pen, 0);
                 }
                 PositionedLayoutItem::InlineBox(inline_box) => {
-                    pen.set_origin(inline_box.x + padding as f32, inline_box.y + padding as f32);
+                    pen.set_origin(inline_box.x, inline_box.y);
                     pen.set_color(foreground_color);
                     pen.fill_rect(inline_box.width, inline_box.height);
                 }
@@ -135,7 +109,6 @@ fn main() {
         // let path = std::path::PathBuf::from(file!());
         let path = std::env::current_dir().unwrap();
         let mut path = std::fs::canonicalize(path).unwrap();
-        path.pop();
         path.push("_output");
         drop(std::fs::create_dir(path.clone()));
         path.push("tiny_skia_render.png");
