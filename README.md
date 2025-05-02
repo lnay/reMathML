@@ -12,7 +12,7 @@ White background on all texts helps check alignments.
 
 | description | rendered png |
 | --- | --- |
-| $${\beta_\alpha}^2$$ | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
+| ${\beta_\alpha}^2$ | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
 | alpha over beta | ![alt](examples/alpha_over_beta.png "{\\frac{\\alpha}{\\beta}}") |
 | alpha_n over two | ![alt](examples/half_alpha_n.png "{\\frac{\\alpha}{\\beta}}") |
 
