@@ -8,13 +8,13 @@ only outputs presentation nodes, which could make this fit for the purpose of re
 
 ## Render examples:
 
-White background on all texts helps check alignments.
+White background on all texts helps check alignments. Open image in new tab can be clearer if you have dark mode in GitHub.
 
-| description | rendered png |
+| LaTeX equivalent | rendered png |
 | --- | --- |
 | ${\beta_\alpha}^2$ | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
-| alpha over beta | ![alt](examples/alpha_over_beta.png "{\\frac{\\alpha}{\\beta}}") |
-| alpha_n over two | ![alt](examples/half_alpha_n.png "{\\frac{\\alpha}{\\beta}}") |
+| $\frac{\alpha}{\beta}$ | ![alt](examples/alpha_over_beta.png "{\\frac{\\alpha}{\\beta}}") |
+| $\frac{\alpha_n}{2}$ | ![alt](examples/half_alpha_n.png "{\\frac{\\alpha}{\\beta}}") |
 
 ## Presentation nodes preliminarily implemented:
 - [x] `<mi>`
