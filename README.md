@@ -52,3 +52,8 @@ White background on all texts helps check alignments. Open image in new tab can 
 - stretching operators
 - make text italic when its meant to (identifier with one character)
 - keep track of where the `+` horizontal line comes to (to keep vertical alignment with fraction line etc)
+
+## And after that:
+- xml parser, set up to testing with Temml, revisit if parts of the MathML standard ignored should stay ignored
+- consider whether CSS is necessary, could potentially use [simplecss](https://github.com/linebender/simplecss)
+- set up benchmarking/profiling, experiment with alternative approaches and whether it makes any difference (recursively returning necessary dimensions and callback to to render into a Pixmap at an arbitrary position instead of copying the contents of pixmaps at every level)
