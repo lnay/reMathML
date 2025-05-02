@@ -8,6 +8,8 @@ outputs any of these nodes, which could make this fit for the purpose of renderi
 
 ## Render examples:
 
+White background on all texts helps check alignments.
+
 | description | rendered png |
 | --- | --- |
 | beta subscript alpha, all superscripted 2 | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
