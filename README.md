@@ -8,9 +8,9 @@ outputs any of these nodes, which could make this fit for the purpose of renderi
 
 ## Render examples:
 
-| raw MathML | rendered png |
+| description | rendered png |
 | --- | --- |
-| <math><msup><msub><mi>β</mi><mi>α</mi></msub><mn>2</mn></msup></math> | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
+| beta subscript alpha, all superscripted 2 | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
 
 ## Presentation nodes preliminarily implemented:
 - [x] `<mi>`
@@ -43,3 +43,6 @@ outputs any of these nodes, which could make this fit for the purpose of renderi
 - [ ] `<malignmark>`
 - [ ] `<mglyph>`
 - [ ] `<mlongdiv>`
+
+## Future subtleties to work in:
+- stretching operators
