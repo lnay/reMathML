@@ -82,7 +82,7 @@ impl Render for Mfrac {
     fn render(&self, font_size: f32, _baseline: u64) -> Pixmap {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
-        let line_width = (font_size / 10.0).ceil() as u32;
+        let line_width = (font_size / 20.0).ceil() as u32;
         let numerator = self.numer.render(font_size, _baseline);
         let denominator = self.denom.render(font_size, _baseline);
         let width = numerator.width().max(denominator.width());
@@ -138,6 +138,7 @@ impl Render for Element {
             Element::Mo(mo) => mo.render(font_size, _baseline),
             Element::Msup(msup) => msup.render(font_size, _baseline),
             Element::Msub(msub) => msub.render(font_size, _baseline),
+            Element::Mfrac(mfrac) => mfrac.render(font_size, _baseline),
             _ => unimplemented!("Render not implemented for all MathML node types"),
         }
     }
@@ -185,6 +186,32 @@ mod tests {
         let fraction = Mfrac {
             numer: Box::<Element>::new(Element::Mi(alpha)),
             denom: Box::<Element>::new(Element::Mi(beta)),
+        };
+        let font_size = 100.0;
+
+        let img = fraction.render(font_size, 0);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn half_alpha_n() {
+        let alpha = Mi {
+            identifier: "α".into(),
+        };
+        let n = Mi {
+            identifier: "n".into(),
+        };
+        let two = Mn { number: "2".into() };
+        let alpha_n = Msub {
+            base: Box::<Element>::new(Element::Mi(alpha)),
+            subscript: Box::<Element>::new(Element::Mi(n)),
+        };
+        let fraction = Mfrac {
+            numer: Box::<Element>::new(Element::Msub(alpha_n)),
+            denom: Box::<Element>::new(Element::Mn(two)),
         };
         let font_size = 100.0;
 
