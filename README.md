@@ -6,6 +6,9 @@ No parsing of the XML format yet, and when it does, it will only deal with "pres
 From some testing, I think [Temml](https://github.com/ronkok/Temml)
 only outputs presentation nodes, which could make this fit for the purpose of rendering LaTeX.
 
+## Requirements
+- "TexMaths Symbols" font installed
+
 ## Render examples:
 
 White background on all texts helps check alignments. Open image in new tab can be clearer if you have dark mode in GitHub.
