@@ -2,8 +2,7 @@ use std::cmp::Ordering;
 
 #[allow(unused)]
 #[allow(dead_code)]
-use crate::mml_types::Element;
-use crate::mml_types::{Mfrac, Mi, Mn, Mo, Msub, Msup};
+use crate::mml_types::{Mfrac, Mi, Mn, Mo, Msub, Msup, mfrac, mi, mn, mo, msub, msup};
 use crate::text_rendering::render_text;
 use tiny_skia::{IntRect, Paint, Pixmap, PixmapPaint, Transform};
 
@@ -37,7 +36,7 @@ impl Render for Mo {
         (pixmap, y)
     }
 }
-impl Render for Msup {
+impl Render for Msup<'_> {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
@@ -57,7 +56,7 @@ impl Render for Msup {
         (pixmap, y + base_y_offset as u32)
     }
 }
-impl Render for Msub {
+impl Render for Msub<'_> {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
@@ -86,7 +85,7 @@ impl Render for Msub {
         (pixmap, y + base_y_offset as u32)
     }
 }
-impl Render for Mfrac {
+impl Render for Mfrac<'_> {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
@@ -138,19 +137,19 @@ impl Render for Mfrac {
         (pixmap, term_height + line_width / 2)
     }
 }
-impl Render for Element {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
-        match self {
-            Element::Mi(mi) => mi.pixmap_with_baseline(font_size),
-            Element::Mn(mn) => mn.pixmap_with_baseline(font_size),
-            Element::Mo(mo) => mo.pixmap_with_baseline(font_size),
-            Element::Msup(msup) => msup.pixmap_with_baseline(font_size),
-            Element::Msub(msub) => msub.pixmap_with_baseline(font_size),
-            Element::Mfrac(mfrac) => mfrac.pixmap_with_baseline(font_size),
-            _ => unimplemented!("Render not implemented for all MathML node types"),
-        }
-    }
-}
+// impl Render for Element {
+//     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+//         match self {
+//             Element::Mi(mi) => mi.pixmap_with_baseline(font_size),
+//             Element::Mn(mn) => mn.pixmap_with_baseline(font_size),
+//             Element::Mo(mo) => mo.pixmap_with_baseline(font_size),
+//             Element::Msup(msup) => msup.pixmap_with_baseline(font_size),
+//             Element::Msub(msub) => msub.pixmap_with_baseline(font_size),
+//             Element::Mfrac(mfrac) => mfrac.pixmap_with_baseline(font_size),
+//             _ => unimplemented!("Render not implemented for all MathML node types"),
+//         }
+//     }
+// }
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,21 +158,11 @@ mod tests {
     #[named]
     #[test]
     fn beta_sub_alpha_sup_2() {
-        let alpha = Mi {
-            identifier: "α".into(),
-        };
-        let beta = Mi {
-            identifier: "β".into(),
-        };
-        let number = Mn { number: "2".into() };
-        let subscript = Msub {
-            base: Box::<Element>::new(Element::Mi(beta)),
-            subscript: Box::<Element>::new(Element::Mi(alpha)),
-        };
-        let whole = Msup {
-            base: Box::<Element>::new(Element::Msub(subscript)),
-            superscript: Box::<Element>::new(Element::Mn(number)),
-        };
+        let alpha = mi("α");
+        let beta = mi("β");
+        let number = mn("2");
+        let subscript = msub(&beta, &alpha);
+        let whole = msup(&subscript, &number);
         let font_size = 100.0;
 
         let img = whole.render(font_size);
@@ -185,16 +174,9 @@ mod tests {
     #[named]
     #[test]
     fn alpha_over_beta() {
-        let alpha = Mi {
-            identifier: "α".into(),
-        };
-        let beta = Mi {
-            identifier: "β".into(),
-        };
-        let fraction = Mfrac {
-            numer: Box::<Element>::new(Element::Mi(alpha)),
-            denom: Box::<Element>::new(Element::Mi(beta)),
-        };
+        let alpha = mi("α");
+        let beta = mi("β");
+        let fraction = mfrac(&alpha, &beta);
         let font_size = 100.0;
 
         let img = fraction.render(font_size);
@@ -206,21 +188,11 @@ mod tests {
     #[named]
     #[test]
     fn half_alpha_n() {
-        let alpha = Mi {
-            identifier: "α".into(),
-        };
-        let n = Mi {
-            identifier: "n".into(),
-        };
-        let two = Mn { number: "2".into() };
-        let alpha_n = Msub {
-            base: Box::<Element>::new(Element::Mi(alpha)),
-            subscript: Box::<Element>::new(Element::Mi(n)),
-        };
-        let fraction = Mfrac {
-            numer: Box::<Element>::new(Element::Msub(alpha_n)),
-            denom: Box::<Element>::new(Element::Mn(two)),
-        };
+        let alpha = mi("α");
+        let n = mn("n");
+        let two = mn("2");
+        let alpha_n = msub(&alpha, &n);
+        let fraction = mfrac(&alpha_n, &two);
         let font_size = 100.0;
 
         let img = fraction.render(font_size);
