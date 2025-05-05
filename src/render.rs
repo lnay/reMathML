@@ -5,9 +5,7 @@ use std::cmp::Ordering;
 use crate::mml_types::Element;
 use crate::mml_types::{Mfrac, Mi, Mn, Mo, Msub, Msup};
 use crate::text_rendering::render_text;
-use tiny_skia::{
-    ALPHA_TRANSPARENT, IntRect, Paint, Pixmap, PixmapPaint, PixmapRef, Rect, Transform,
-};
+use tiny_skia::{IntRect, Paint, Pixmap, PixmapPaint, Transform};
 
 pub trait Render {
     fn render(&self, font_size: f32, baseline: u64) -> Pixmap;

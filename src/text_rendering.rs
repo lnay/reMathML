@@ -8,8 +8,7 @@
 //! if you need emoji rendering.
 
 use parley::{
-    FontContext, GenericFamily, GlyphRun, Layout, LayoutContext, PositionedLayoutItem,
-    StyleProperty,
+    FontContext, FontFamily, GlyphRun, Layout, LayoutContext, PositionedLayoutItem, StyleProperty,
 };
 use skrifa::{
     GlyphId, MetadataProvider, OutlineGlyph,
@@ -17,7 +16,7 @@ use skrifa::{
     outline::{DrawSettings, OutlinePen},
     raw::FontRef as ReadFontsRef,
 };
-use tiny_skia::{Color, FillRule, Paint, PathBuilder, Pixmap, PixmapMut, Rect, Transform};
+use tiny_skia::{Color, FillRule, Paint, PathBuilder, Pixmap, PixmapMut, Transform};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct ColorBrush {
@@ -58,7 +57,12 @@ pub fn render_text(text: String, font_size: f32) -> Pixmap {
     builder.push_default(brush_style);
 
     // Set default font family
-    builder.push_default(GenericFamily::SystemUi);
+    // builder.push_default(StyleProperty::FontStyle(parley::FontStyle::Italic));
+    // builder.push_default(GenericFamily::Math);
+    // builder.push_default(FontFamily::parse("TeX Gyre Pagella Math").unwrap());
+    // builder.push_default(FontFamily::parse("Libertinus Math").unwrap());
+    // builder.push_default(FontFamily::parse("Tex Gyre Termes Math").unwrap());
+    builder.push_default(FontFamily::parse("TexMaths Symbols").unwrap());
     builder.push_default(StyleProperty::FontSize(font_size));
 
     // Build the builder into a Layout
@@ -85,11 +89,12 @@ pub fn render_text(text: String, font_size: f32) -> Pixmap {
                 PositionedLayoutItem::GlyphRun(glyph_run) => {
                     render_glyph_run(&glyph_run, &mut pen, 0);
                 }
-                PositionedLayoutItem::InlineBox(inline_box) => {
-                    pen.set_origin(inline_box.x, inline_box.y);
-                    pen.set_color(foreground_color);
-                    pen.fill_rect(inline_box.width, inline_box.height);
-                }
+                // PositionedLayoutItem::InlineBox(inline_box) => {
+                //     pen.set_origin(inline_box.x, inline_box.y);
+                //     pen.set_color(foreground_color);
+                //     pen.fill_rect(inline_box.width, inline_box.height);
+                // }
+                _ => {}
             }
         }
     }
@@ -136,36 +141,36 @@ fn render_glyph_run(glyph_run: &GlyphRun<'_, ColorBrush>, pen: &mut TinySkiaPen<
     }
 
     // Draw decorations: underline & strikethrough
-    let style = glyph_run.style();
-    let run_metrics = run.metrics();
-    if let Some(decoration) = &style.underline {
-        let offset = decoration.offset.unwrap_or(run_metrics.underline_offset);
-        let size = decoration.size.unwrap_or(run_metrics.underline_size);
-        render_decoration(pen, glyph_run, decoration.brush, offset, size, padding);
-    }
-    if let Some(decoration) = &style.strikethrough {
-        let offset = decoration
-            .offset
-            .unwrap_or(run_metrics.strikethrough_offset);
-        let size = decoration.size.unwrap_or(run_metrics.strikethrough_size);
-        render_decoration(pen, glyph_run, decoration.brush, offset, size, padding);
-    }
+    // let style = glyph_run.style();
+    // let run_metrics = run.metrics();
+    // if let Some(decoration) = &style.underline {
+    //     let offset = decoration.offset.unwrap_or(run_metrics.underline_offset);
+    //     let size = decoration.size.unwrap_or(run_metrics.underline_size);
+    //     render_decoration(pen, glyph_run, decoration.brush, offset, size, padding);
+    // }
+    // if let Some(decoration) = &style.strikethrough {
+    //     let offset = decoration
+    //         .offset
+    //         .unwrap_or(run_metrics.strikethrough_offset);
+    //     let size = decoration.size.unwrap_or(run_metrics.strikethrough_size);
+    //     render_decoration(pen, glyph_run, decoration.brush, offset, size, padding);
+    // }
 }
 
-fn render_decoration(
-    pen: &mut TinySkiaPen<'_>,
-    glyph_run: &GlyphRun<'_, ColorBrush>,
-    brush: ColorBrush,
-    offset: f32,
-    width: f32,
-    padding: u32,
-) {
-    let y = glyph_run.baseline() - offset + padding as f32;
-    let x = glyph_run.offset() + padding as f32;
-    pen.set_color(brush.color);
-    pen.set_origin(x, y);
-    pen.fill_rect(glyph_run.advance(), width);
-}
+// fn render_decoration(
+//     pen: &mut TinySkiaPen<'_>,
+//     glyph_run: &GlyphRun<'_, ColorBrush>,
+//     brush: ColorBrush,
+//     offset: f32,
+//     width: f32,
+//     padding: u32,
+// ) {
+//     let y = glyph_run.baseline() - offset + padding as f32;
+//     let x = glyph_run.offset() + padding as f32;
+//     pen.set_color(brush.color);
+//     pen.set_origin(x, y);
+//     pen.fill_rect(glyph_run.advance(), width);
+// }
 
 struct TinySkiaPen<'a> {
     pub(crate) pixmap: PixmapMut<'a>,
@@ -195,11 +200,11 @@ impl TinySkiaPen<'_> {
         self.paint.set_color(color);
     }
 
-    pub(crate) fn fill_rect(&mut self, width: f32, height: f32) {
-        let rect = Rect::from_xywh(self.x, self.y, width, height).unwrap();
-        self.pixmap
-            .fill_rect(rect, &self.paint, Transform::identity(), None);
-    }
+    // pub(crate) fn fill_rect(&mut self, width: f32, height: f32) {
+    //     let rect = Rect::from_xywh(self.x, self.y, width, height).unwrap();
+    //     self.pixmap
+    //         .fill_rect(rect, &self.paint, Transform::identity(), None);
+    // }
 
     pub(crate) fn draw_glyph(
         &mut self,
