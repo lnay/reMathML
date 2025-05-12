@@ -15,18 +15,20 @@ White background on all texts helps check alignments. Open image in new tab can 
 
 | LaTeX equivalent | rendered png |
 | --- | --- |
-| ${\beta_\alpha}^2$ | ![alt](examples/beta_sub_alpha_sup_2.png "{\\beta_{\\alpha}}^{2}") |
-| $\frac{\alpha}{\beta}$ | ![alt](examples/alpha_over_beta.png "{\\frac{\\alpha}{\\beta}}") |
-| $\frac{\alpha_n}{2}$ | ![alt](examples/half_alpha_n.png "{\\frac{\\alpha}{\\beta}}") |
+| ${\beta_\alpha}^2$ | ![alt](examples/beta_sub_alpha_sup_2.png) |
+| $\frac{\alpha}{\beta}$ | ![alt](examples/alpha_over_beta.png) |
+| $\frac{\alpha_n}{2}$ | ![alt](examples/half_alpha_n.png) |
+| $\alpha + \beta$ | ![alt](examples/alpha_plus_beta.png) |
+| $x + \frac{1}{2}$ | ![alt](examples/x_and_a_half.png) |
 
 ## Presentation nodes preliminarily implemented:
 - [x] `<mi>`
 - [x] `<mn>`
 - [x] `<msub>`
 - [x] `<msup>`
-- [ ] `<mi>`
-- [ ] `<mo>`
+- [x] `<mo>`
 - [x] `<mfrac>`
+- [x] `<mrow>`
 - [ ] `<mtext>`
 - [ ] `<mspace>`
 - [ ] `<ms>`

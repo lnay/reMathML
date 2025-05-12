@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 #[allow(unused)]
 #[allow(dead_code)]
-use crate::mml_types::{Mfrac, Mi, Mn, Mo, Msub, Msup, mfrac, mi, mn, mo, msub, msup};
+use crate::mml_types::{Mfrac, Mi, Mn, Mo, Mrow, Msub, Msup, mfrac, mi, mn, mo, mrow, msub, msup};
 use crate::text_rendering::render_text;
 use tiny_skia::{IntRect, Paint, Pixmap, PixmapPaint, Transform};
 
@@ -17,7 +17,7 @@ pub trait Render {
 impl Render for Mi {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let pixmap = render_text(self.identifier.clone(), font_size);
-        let y = 2 * pixmap.height() / 3;
+        let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
@@ -25,14 +25,14 @@ impl Render for Mi {
 impl Render for Mn {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let pixmap = render_text(self.number.clone(), font_size);
-        let y = 2 * pixmap.height() / 3;
+        let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
 impl Render for Mo {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let pixmap = render_text(self.operator.clone(), font_size);
-        let y = 2 * pixmap.height() / 3;
+        let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
@@ -85,11 +85,55 @@ impl Render for Msub<'_> {
         (pixmap, y + base_y_offset as u32)
     }
 }
+impl Render for Mrow<'_> {
+    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+        let paint = PixmapPaint::default();
+        let transform = Transform::default();
+        let spacing = (font_size / 10.0).floor() as u32;
+
+        let rendered_children = self
+            .children
+            .iter()
+            .map(|child| child.pixmap_with_baseline(font_size))
+            .collect::<Vec<_>>();
+        let baseline = rendered_children.iter().map(|child| child.1).max().unwrap();
+        let below_baseline = rendered_children
+            .iter()
+            .map(|child| child.0.height() as i32 - baseline as i32)
+            .max()
+            .unwrap() as u32;
+        let width = rendered_children
+            .iter()
+            .map(|child| child.0.width())
+            .sum::<u32>()
+            + spacing * (rendered_children.len() - 1) as u32;
+        let height = baseline + below_baseline;
+        let mut pixmap = Pixmap::new(width, height).unwrap();
+
+        let mut x = 0;
+        rendered_children.iter().for_each(|child| {
+            let (child_pixmap, child_baseline) = child;
+            let child_width = child_pixmap.width();
+            let y = baseline - child_baseline;
+            pixmap.draw_pixmap(
+                x as i32,
+                y as i32,
+                child_pixmap.as_ref(),
+                &paint,
+                transform,
+                None,
+            );
+            x += child_width;
+            x += spacing;
+        });
+        (pixmap, baseline)
+    }
+}
 impl Render for Mfrac<'_> {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
-        let line_width = (font_size / 20.0).ceil() as u32;
+        let line_width = (font_size / 25.0).ceil() as u32;
         let (numerator, _) = self.numer.pixmap_with_baseline(font_size);
         let (denominator, _) = self.denom.pixmap_with_baseline(font_size);
         let width = numerator.width().max(denominator.width());
@@ -196,6 +240,38 @@ mod tests {
         let font_size = 100.0;
 
         let img = fraction.render(font_size);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn alpha_plus_beta() {
+        let alpha = mi("α");
+        let beta = mi("β");
+        let plus = mo("+");
+        let row = mrow(vec![&alpha, &plus, &beta]);
+        let font_size = 100.0;
+
+        let img = row.render(font_size);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn x_and_a_half() {
+        let x = mi("x");
+        let plus = mo("+");
+        let one = mn("1");
+        let two = mn("2");
+        let half = mfrac(&one, &two);
+        let row = mrow(vec![&x, &plus, &half]);
+        let font_size = 100.0;
+
+        let img = row.render(font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();

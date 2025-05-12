@@ -51,6 +51,9 @@ use crate::render::Render;
 pub struct Mrow<'a> {
     pub children: Vec<&'a dyn Render>,
 }
+pub fn mrow<'a>(children: Vec<&'a dyn Render>) -> Mrow<'a> {
+    Mrow { children }
+}
 pub struct Mn {
     pub number: String,
 }
