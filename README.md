@@ -20,6 +20,8 @@ White background on all texts helps check alignments. Open image in new tab can 
 | $\frac{\alpha_n}{2}$ | ![alt](examples/half_alpha_n.png) |
 | $\alpha + \beta$ | ![alt](examples/alpha_plus_beta.png) |
 | $x + \frac{1}{2}$ | ![alt](examples/x_and_a_half.png) |
+| $\sqrt{2}$ | ![alt](examples/sqrt2.png) |
+| quadratic roots | ![alt](examples/discriminant.png) |
 
 ## Presentation nodes preliminarily implemented:
 - [x] `<mi>`
@@ -29,7 +31,7 @@ White background on all texts helps check alignments. Open image in new tab can 
 - [x] `<mo>`
 - [x] `<mfrac>`
 - [x] `<mrow>`
-- [ ] `<mtext>`
+- [x] `<mtext>`
 - [ ] `<mspace>`
 - [ ] `<ms>`
 - [ ] `<msqrt>`
