@@ -68,6 +68,13 @@ pub fn mi(identifier: &str) -> Mi {
     let identifier = identifier.into();
     Mi { identifier }
 }
+pub struct Mtext {
+    pub text: String,
+}
+pub fn mtext(text: &str) -> Mtext {
+    let text = text.into();
+    Mtext { text }
+}
 pub struct Mo {
     pub operator: String,
 }

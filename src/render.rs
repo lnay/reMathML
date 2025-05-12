@@ -3,7 +3,8 @@ use std::cmp::Ordering;
 #[allow(unused)]
 #[allow(dead_code)]
 use crate::mml_types::{
-    Mfrac, Mi, Mn, Mo, Mroot, Mrow, Msub, Msup, mfrac, mi, mn, mo, mroot, mrow, msub, msup,
+    Mfrac, Mi, Mn, Mo, Mroot, Mrow, Msub, Msup, Mtext, mfrac, mi, mn, mo, mroot, mrow, msub, msup,
+    mtext,
 };
 use crate::text_rendering::render_text;
 use tiny_skia::{FillRule, IntRect, Paint, PathBuilder, Pixmap, PixmapPaint, Stroke, Transform};
@@ -19,6 +20,14 @@ pub trait Render {
 impl Render for Mi {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
         let pixmap = render_text(self.identifier.clone(), font_size);
+        let y = pixmap.height() / 2;
+        (pixmap, y)
+    }
+}
+
+impl Render for Mtext {
+    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+        let pixmap = render_text(self.text.clone(), font_size);
         let y = pixmap.height() / 2;
         (pixmap, y)
     }
@@ -344,7 +353,7 @@ mod tests {
     fn discriminant() {
         let font_size = 100.0;
         let img = mrow(vec![
-            &mi("Δ"),
+            &mtext("roots"),
             &mo("="),
             &mfrac(
                 &mrow(vec![
