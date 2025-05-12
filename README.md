@@ -55,7 +55,7 @@ White background on all texts helps check alignments. Open image in new tab can 
 
 ## Future subtleties to work in:
 - stretching operators
-- make text italic when its meant to (identifier with one character)
+- make text italic when it's meant to (identifier with one character)
 - keep track of where the `+` horizontal line comes to (to keep vertical alignment with fraction line etc)
 
 ## And after that:
