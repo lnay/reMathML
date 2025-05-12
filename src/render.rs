@@ -2,9 +2,11 @@ use std::cmp::Ordering;
 
 #[allow(unused)]
 #[allow(dead_code)]
-use crate::mml_types::{Mfrac, Mi, Mn, Mo, Mrow, Msub, Msup, mfrac, mi, mn, mo, mrow, msub, msup};
+use crate::mml_types::{
+    Mfrac, Mi, Mn, Mo, Mroot, Mrow, Msub, Msup, mfrac, mi, mn, mo, mroot, mrow, msub, msup,
+};
 use crate::text_rendering::render_text;
-use tiny_skia::{IntRect, Paint, Pixmap, PixmapPaint, Transform};
+use tiny_skia::{FillRule, IntRect, Paint, PathBuilder, Pixmap, PixmapPaint, Stroke, Transform};
 
 pub trait Render {
     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32);
@@ -181,6 +183,53 @@ impl Render for Mfrac<'_> {
         (pixmap, term_height + line_width / 2)
     }
 }
+impl Render for Mroot<'_> {
+    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+        let paint = Paint::default();
+        let pixmappaint = PixmapPaint::default();
+        let transform = Transform::default();
+        let line_width = (font_size / 25.0).ceil() as u32;
+
+        let (inner, inner_baseline) = self.base.pixmap_with_baseline(font_size);
+
+        let baseline = inner_baseline + line_width;
+        let width = inner.width() + inner.height() / 2;
+        let height = inner.height() + 2 * line_width;
+
+        let mut pixmap = Pixmap::new(width, height).unwrap();
+        pixmap.draw_pixmap(
+            inner.height() as i32 / 2,
+            line_width as i32,
+            inner.as_ref(),
+            &pixmappaint,
+            transform,
+            None,
+        );
+        let mut root_linepath = PathBuilder::new();
+        let mut stroke = Stroke::default();
+        stroke.width = line_width as f32;
+        root_linepath.move_to(width as f32, line_width as f32 / 2.);
+        root_linepath.line_to(inner.height() as f32 / 2., line_width as f32 / 2.);
+        root_linepath.line_to(
+            inner.height() as f32 / 4.,
+            height as f32 - line_width as f32 / 2.,
+        );
+        root_linepath.line_to(
+            height as f32 / 9.,
+            2. * (height as f32 - line_width as f32) / 3.,
+        );
+        root_linepath.line_to(0., 7. * (height as f32 - line_width as f32) / 9.);
+        // root_linepath.close();
+        pixmap.stroke_path(
+            &root_linepath.finish().unwrap(),
+            &paint,
+            &stroke,
+            Transform::identity(),
+            None,
+        );
+        (pixmap, baseline)
+    }
+}
 // impl Render for Element {
 //     fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
 //         match self {
@@ -272,6 +321,51 @@ mod tests {
         let font_size = 100.0;
 
         let img = row.render(font_size);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn sqrt2() {
+        let two = mn("2");
+        let sqrt_2 = mroot(&two, None);
+        let font_size = 100.0;
+
+        let img = sqrt_2.render(font_size);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn discriminant() {
+        let font_size = 100.0;
+        let img = mrow(vec![
+            &mi("Δ"),
+            &mo("≔"),
+            &mfrac(
+                &mrow(vec![
+                    &mo("−"),
+                    &mi("b"),
+                    &mo("±"),
+                    &mroot(
+                        &mrow(vec![
+                            &msup(&mi("b"), &mn("2")),
+                            &mo("−"),
+                            &mn("4"),
+                            &mi("a"),
+                            &mi("c"),
+                        ]),
+                        None,
+                    ),
+                ]),
+                &mrow(vec![&mn("2"), &mi("a")]),
+            ),
+        ])
+        .render(font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();

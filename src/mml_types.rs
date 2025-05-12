@@ -96,6 +96,13 @@ pub struct Mfrac<'a> {
 pub fn mfrac<'a>(numer: &'a dyn Render, denom: &'a dyn Render) -> Mfrac<'a> {
     Mfrac { numer, denom }
 }
+pub struct Mroot<'a> {
+    pub base: &'a dyn Render,
+    pub index: Option<&'a dyn Render>,
+}
+pub fn mroot<'a>(base: &'a dyn Render, index: Option<&'a dyn Render>) -> Mroot<'a> {
+    Mroot { base, index }
+}
 
 // /// Represents content markup elements
 // pub struct ContentNode {
