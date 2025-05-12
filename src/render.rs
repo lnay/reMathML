@@ -345,7 +345,7 @@ mod tests {
         let font_size = 100.0;
         let img = mrow(vec![
             &mi("Δ"),
-            &mo("≔"),
+            &mo("="),
             &mfrac(
                 &mrow(vec![
                     &mo("−"),
