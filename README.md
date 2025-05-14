@@ -58,7 +58,7 @@ White background on all texts helps check alignments. Open image in new tab can 
 ## Future subtleties to work in:
 - stretching operators
 - make text italic when it's meant to (identifier with one character)
-- keep track of where the `+` horizontal line comes to (to keep vertical alignment with fraction line etc)
+- add an interface for renderers, and try make `vello` implement whatever trait is drawn up, and only load fonts once.
 
 ## And after that:
 - xml parser, set up to testing with Temml, revisit if parts of the MathML standard ignored should stay ignored
