@@ -2,7 +2,9 @@
 #[allow(dead_code)]
 use std::cmp::Ordering;
 
-use crate::mml_types::{Element, Mfrac, Mi, Mn, Mo, Mphantom, Mroot, Mrow, Msub, Msup, Mtext};
+use crate::mml_types::{
+    Element, Mfrac, Mi, Mn, Mo, Mphantom, Mroot, Mrow, Msqrt, Msub, Msup, Mtext,
+};
 use crate::mml_types::{mfrac, mi, mn, mo, mroot, mrow, msub, msup, mtext};
 use crate::text_rendering::{TextRenderer, render_text};
 use tiny_skia::{FillRule, IntRect, Paint, PathBuilder, Pixmap, PixmapPaint, Stroke, Transform};
@@ -325,7 +327,12 @@ impl Render for Mfrac {
     }
 }
 
-impl Render for Mroot {
+struct _Mroot<'a> {
+    base: &'a Element,
+    index: Option<&'a Element>,
+}
+
+impl Render for _Mroot<'_> {
     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
         let paint = Paint::default();
         let pixmappaint = PixmapPaint::default();
@@ -389,6 +396,25 @@ impl Render for Mroot {
         }
     }
 }
+impl Render for Mroot {
+    fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
+        _Mroot {
+            base: &self.base,
+            index: self.index.as_ref().map(|x| &(**x)), // is there a cleaner way to do this?
+        }
+        .plan_render(text_renderer, font_size)
+    }
+}
+impl Render for Msqrt {
+    fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
+        _Mroot {
+            base: &self.term,
+            index: None,
+        }
+        .plan_render(text_renderer, font_size)
+    }
+}
+
 impl Render for Element {
     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
         match self {
@@ -400,6 +426,7 @@ impl Render for Element {
             Element::Msub(msub) => msub.plan_render(text_renderer, font_size),
             Element::Mfrac(mfrac) => mfrac.plan_render(text_renderer, font_size),
             Element::Mroot(mroot) => mroot.plan_render(text_renderer, font_size),
+            Element::Msqrt(msqrt) => msqrt.plan_render(text_renderer, font_size),
             Element::Mrow(mrow) => mrow.plan_render(text_renderer, font_size),
             Element::Mphantom(mphantom) => mphantom.plan_render(text_renderer, font_size),
         }

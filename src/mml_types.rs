@@ -57,7 +57,7 @@ pub enum Element {
     Mtext(Mtext),
     // Mspace,
     // Ms,
-    // Msqrt(Msqrt),
+    Msqrt(Msqrt),
     Mroot(Mroot),
     // Mstyle,
     // Merror,
@@ -119,10 +119,10 @@ pub fn mtext(text: &str) -> Element {
     let text = text.into();
     Element::Mtext(Mtext { text })
 }
-// pub fn msqrt(term: Element) -> Element {
-//     let term = term.into();
-//     Element::Msqrt(Msqrt { term })
-// }
+pub fn msqrt(term: Element) -> Element {
+    let term = term.into();
+    Element::Msqrt(Msqrt { term })
+}
 pub fn mroot(base: Element, index: Option<Element>) -> Element {
     let base = base.into();
     let index = index.map(|i| i.into());

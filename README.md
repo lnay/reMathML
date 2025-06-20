@@ -39,7 +39,7 @@ White background on all texts helps check alignments. Open image in new tab can 
 - [ ] `<mstyle>`
 - [ ] `<merror>`
 - [ ] `<mpadded>`
-- [ ] `<mphantom>`
+- [x] `<mphantom>`
 - [ ] `<mfenced>`
 - [ ] `<menclose>`
 - [ ] `<msubsup>`
