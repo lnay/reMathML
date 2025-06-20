@@ -56,26 +56,48 @@ impl Render for Mo {
         text_renderer.plan_render_text(self.operator.clone(), font_size)
     }
 }
-// impl Render for Msup {
-//     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> (Pixmap, u32) {
-//         let paint = PixmapPaint::default();
-//         let transform = Transform::default();
-//         const SUPERSCRIPT_FONT_RATIO: f32 = 0.7;
-//         const SUPERSCRIPT_VERTICAL_OFFSET: f32 = 0.5;
-//         let (base, y) = self.base.plan_render(text_renderer, font_size);
-//         let (superscript, _) = self
-//             .superscript
-//             .plan_render(text_renderer, font_size * SUPERSCRIPT_FONT_RATIO);
-//         let width = base.width() + superscript.width();
-//         let height = base.height().max(superscript.height() * 2);
-//         let base_y_offset = 0.max(superscript.height() - base.height() / 2) as i32;
-//         let mut pixmap = Pixmap::new(width, height).unwrap();
-//         let base_width = base.width() as i32;
-//         pixmap.draw_pixmap(0, base_y_offset, base.as_ref(), &paint, transform, None);
-//         pixmap.draw_pixmap(base_width, 0, superscript.as_ref(), &paint, transform, None);
-//         (pixmap, y + base_y_offset as u32)
-//     }
-// }
+impl Render for Msup {
+    fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
+        let paint = PixmapPaint::default();
+        let transform = Transform::default();
+        const SUPERSCRIPT_FONT_RATIO: f32 = 0.7;
+        const SUPERSCRIPT_VERTICAL_OFFSET: f32 = 0.5;
+        // let (base, y)
+        let RenderingPlan {
+            callback: base_callback,
+            baseline: base_baseline,
+            width: base_width,
+            height: base_height,
+        } = self.base.plan_render(text_renderer, font_size);
+        // let (superscript, _)
+        let RenderingPlan {
+            callback: superscript_callback,
+            baseline: superscript_baseline,
+            width: superscript_width,
+            height: superscript_height,
+        } = self
+            .superscript
+            .plan_render(text_renderer, font_size * SUPERSCRIPT_FONT_RATIO);
+
+        let width = base_width + superscript_width;
+        let height = base_height.max(superscript_height * 2);
+        let base_y_offset = 0.max(superscript_height - base_height / 2);
+        let baseline = base_baseline + base_y_offset;
+
+        let callback =
+            move |text_renderer: &mut TextRenderer, pixmap: &mut Pixmap, x: u32, y: u32| {
+                base_callback(text_renderer, pixmap, x, y + base_y_offset);
+                superscript_callback(text_renderer, pixmap, x + base_width, y);
+            };
+
+        RenderingPlan {
+            callback: Box::new(callback),
+            baseline,
+            width,
+            height,
+        }
+    }
+}
 // impl Render for Msub {
 //     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> (Pixmap, u32) {
 //         let paint = PixmapPaint::default();
@@ -272,7 +294,7 @@ impl Render for Element {
             Element::Mn(mn) => mn.plan_render(text_renderer, font_size),
             Element::Mo(mo) => mo.plan_render(text_renderer, font_size),
             Element::Mtext(mtext) => mtext.plan_render(text_renderer, font_size),
-            Element::Msup(msup) => todo!("aoeu"), // msup.plan_render(text_renderer, font_size),
+            Element::Msup(msup) => msup.plan_render(text_renderer, font_size),
             Element::Msub(msub) => todo!("aoeu"), // msub.plan_render(text_renderer, font_size),
             Element::Mfrac(mfrac) => todo!("aoeu"), // mfrac.plan_render(text_renderer, font_size),
             Element::Mroot(mroot) => mroot.plan_render(text_renderer, font_size),
@@ -293,6 +315,18 @@ mod tests {
     #[test]
     fn single_char() {
         let whole = mi("β");
+        let font_size = 100.0;
+
+        let img = whole.render(&mut TextRenderer::new(), font_size);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn beta_squared() {
+        let whole = msup(mi("β"), mn("2"));
         let font_size = 100.0;
 
         let img = whole.render(&mut TextRenderer::new(), font_size);
