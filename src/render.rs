@@ -53,7 +53,24 @@ impl Render for Mn {
 }
 impl Render for Mo {
     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
-        text_renderer.plan_render_text(self.operator.clone(), font_size)
+        let spacing = (font_size / 10.0).floor() as u32;
+        let RenderingPlan {
+            callback,
+            baseline,
+            width,
+            height,
+        } = text_renderer.plan_render_text(self.operator.clone(), font_size);
+        let width = width + 2 * spacing;
+        let callback =
+            move |text_renderer: &mut TextRenderer, pixmap: &mut Pixmap, x: u32, y: u32| {
+                callback(text_renderer, pixmap, x + spacing, y);
+            };
+        RenderingPlan {
+            callback: Box::new(callback),
+            baseline,
+            width,
+            height,
+        }
     }
 }
 impl Render for Msup {
@@ -152,7 +169,6 @@ impl Render for Mrow {
     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
-        let spacing = (font_size / 10.0).floor() as u32;
 
         let children_render_plans = self
             .terms
@@ -172,8 +188,7 @@ impl Render for Mrow {
         let width = children_render_plans
             .iter()
             .map(|child| child.width)
-            .sum::<u32>()
-            + spacing * (children_render_plans.len() - 1) as u32;
+            .sum::<u32>();
         let height = baseline + below_baseline;
 
         let callback = move |text_renderer: &mut TextRenderer,
@@ -191,7 +206,6 @@ impl Render for Mrow {
                     y + offset_y,
                 );
                 offset_in_row += child.width;
-                offset_in_row += spacing;
             });
         };
 
