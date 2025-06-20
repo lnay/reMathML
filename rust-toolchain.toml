@@ -1,0 +1,9 @@
+[toolchain]
+
+channel = "nightly-2025-03-24"
+
+components = ["cargo", "rust-docs", "rust-std", "rustc", "rustfmt"]
+
+targets = ["x86_64-unknown-linux-gnu"]
+
+profile = "minimal"

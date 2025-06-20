@@ -1,135 +1,124 @@
 use std::collections::HashMap;
 
-use crate::render::Render;
-
 /// The root element of a MathML document
-// pub struct Math {
-//     pub attributes: HashMap<String, String>,
-//     pub content: Element,
-// }
-
-/// Types of semantic elements
-// pub enum SemanticType {
-//     Annotation,
-//     AnnotationXml
-// }
-
-/// Types of presentation elements
-// pub enum Element {
-//     Mrow(Mrow),
-//     Mi(Mi),
-//     Mn(Mn),
-//     Mo(Mo),
-//     Msub(Msub),
-//     Msup(Msup),
-//     Mfrac(Mfrac),
-//     // Mtext,
-//     // Mspace,
-//     // Ms,
-//     // Msqrt,
-//     // Mroot,
-//     // Mstyle,
-//     // Merror,
-//     // Mpadded,
-//     // Mphantom,
-//     // Mfenced,
-//     // Menclose,
-//     // Msubsup,
-//     // Munder,
-//     // Mover,
-//     // Munderover,
-//     // Mmultiscripts,
-//     // Mtable,
-//     // Mtr,
-//     // Mtd,
-//     // Maligngroup,
-//     // Malignmark,
-//     // Mglyph,
-//     // Mlongdiv,
-// }
-
-pub struct Mrow<'a> {
-    pub children: Vec<&'a dyn Render>,
+pub struct Math {
+    pub attributes: HashMap<String, String>,
+    pub content: Element,
 }
-pub fn mrow<'a>(children: Vec<&'a dyn Render>) -> Mrow<'a> {
-    Mrow { children }
-}
-pub struct Mn {
-    pub number: String,
-}
-pub fn mn(number: &str) -> Mn {
-    let number = number.into();
-    Mn { number }
+
+pub struct Mrow {
+    pub terms: Vec<Element>,
 }
 pub struct Mi {
     pub identifier: String,
 }
-pub fn mi(identifier: &str) -> Mi {
-    let identifier = identifier.into();
-    Mi { identifier }
-}
-pub struct Mtext {
-    pub text: String,
-}
-pub fn mtext(text: &str) -> Mtext {
-    let text = text.into();
-    Mtext { text }
+pub struct Mn {
+    pub number: String,
 }
 pub struct Mo {
     pub operator: String,
 }
-pub fn mo(operator: &str) -> Mo {
+pub struct Msub {
+    pub base: Box<Element>,
+    pub subscript: Box<Element>,
+}
+pub struct Msup {
+    pub base: Box<Element>,
+    pub superscript: Box<Element>,
+}
+pub struct Mfrac {
+    pub numerator: Box<Element>,
+    pub denominator: Box<Element>,
+}
+pub struct Mtext {
+    pub text: String,
+}
+// Mspace,
+// Ms,
+pub struct Msqrt {
+    pub term: Box<Element>,
+}
+pub struct Mroot {
+    pub base: Box<Element>,
+    pub index: Option<Box<Element>>,
+}
+/// Types of presentation elements
+pub enum Element {
+    Mrow(Mrow),
+    Mi(Mi),
+    Mn(Mn),
+    Mo(Mo),
+    Msub(Msub),
+    Msup(Msup),
+    Mfrac(Mfrac),
+    Mtext(Mtext),
+    // Mspace,
+    // Ms,
+    // Msqrt(Msqrt),
+    Mroot(Mroot),
+    // Mstyle,
+    // Merror,
+    // Mpadded,
+    // Mphantom,
+    // Mfenced,
+    // Menclose,
+    // Msubsup,
+    // Munder,
+    // Mover,
+    // Munderover,
+    // Mmultiscripts,
+    // Mtable,
+    // Mtr,
+    // Mtd,
+    // Maligngroup,
+    // Malignmark,
+    // Mglyph,
+    // Mlongdiv,
+}
+
+pub fn mrow(terms: Vec<Element>) -> Element {
+    Element::Mrow(Mrow { terms })
+}
+pub fn mi(identifier: &str) -> Element {
+    let identifier = identifier.into();
+    Element::Mi(Mi { identifier })
+}
+pub fn mo(operator: &str) -> Element {
     let operator = operator.into();
-    Mo { operator }
+    Element::Mo(Mo { operator })
 }
-pub struct Msub<'a> {
-    pub base: &'a dyn Render,
-    pub subscript: &'a dyn Render,
+pub fn mn(number: &str) -> Element {
+    let number = number.into();
+    Element::Mn(Mn { number })
 }
-pub fn msub<'a>(base: &'a dyn Render, subscript: &'a dyn Render) -> Msub<'a> {
-    Msub { base, subscript }
+pub fn msup(base: Element, superscript: Element) -> Element {
+    let base = Box::new(base);
+    let superscript = Box::new(superscript);
+    Element::Msup(Msup { base, superscript })
 }
-pub struct Msup<'a> {
-    pub base: &'a dyn Render,
-    pub superscript: &'a dyn Render,
+pub fn msub(base: Element, subscript: Element) -> Element {
+    let base = base.into();
+    let subscript = subscript.into();
+    Element::Msub(Msub { base, subscript })
 }
-pub fn msup<'a>(base: &'a dyn Render, superscript: &'a dyn Render) -> Msup<'a> {
-    Msup { base, superscript }
+pub fn mfrac(numerator: Element, denominator: Element) -> Element {
+    let numerator = numerator.into();
+    let denominator = denominator.into();
+    Element::Mfrac(Mfrac {
+        numerator,
+        denominator,
+    })
 }
-pub struct Mfrac<'a> {
-    pub numer: &'a dyn Render,
-    pub denom: &'a dyn Render,
+pub fn mtext(text: &str) -> Element {
+    let text = text.into();
+    Element::Mtext(Mtext { text })
 }
-pub fn mfrac<'a>(numer: &'a dyn Render, denom: &'a dyn Render) -> Mfrac<'a> {
-    Mfrac { numer, denom }
-}
-pub struct Mroot<'a> {
-    pub base: &'a dyn Render,
-    pub index: Option<&'a dyn Render>,
-}
-pub fn mroot<'a>(base: &'a dyn Render, index: Option<&'a dyn Render>) -> Mroot<'a> {
-    Mroot { base, index }
-}
-
-// /// Represents content markup elements
-// pub struct ContentNode {
-//     pub node_type: ContentType,
-//     pub attributes: HashMap<String, String>,
-//     pub children: Vec<Element>,
+// pub fn msqrt(term: Element) -> Element {
+//     let term = term.into();
+//     Element::Msqrt(Msqrt { term })
 // }
-
-// /// Types of content elements
-// pub enum ContentType {
-//     Apply,
-//     Bind,
-//     Ci,
-//     Cn,
-//     Csymbol,
-//     Share,
-//     Declare,
-//     Lambda,
-//     Piecewise,
-//     Piece,
-//     Otherwise,
-//     Sep,
-// }
+pub fn mroot(base: Element, index: Option<Element>) -> Element {
+    let base = base.into();
+    let index = index.map(|i| i.into());
+    Element::Mroot(Mroot { base, index })
+}
