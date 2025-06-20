@@ -7,3 +7,7 @@ test render::tests::discriminant finished in 2.68s
 995a640b27ec3fb98c2aec9f353a7178565fc2bb Only initialize contexts for text rendering once
 test render::tests::discriminant_bench ... bench:   3,758,341.20 ns/iter (+/- 61,212.22)
 test render::tests::discriminant finished in 0.38s
+
+c125719d4eea562346ce986bd082d49160924e74 Change recursive part to return callbacks to render on a single pimap later instead of returning smaller pixmaps
+test render::tests::discriminant_bench ... bench:     415,083.45 ns/iter (+/- 16,091.30)
+test render::tests::discriminant finished in 0.26s

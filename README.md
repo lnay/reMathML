@@ -63,4 +63,4 @@ White background on all texts helps check alignments. Open image in new tab can 
 ## And after that:
 - xml parser, set up to testing with Temml, revisit if parts of the MathML standard ignored should stay ignored
 - consider whether CSS is necessary, could potentially use [simplecss](https://github.com/linebender/simplecss)
-- set up benchmarking/profiling, experiment with alternative approaches and whether it makes any difference (recursively returning necessary dimensions and callback to to render into a Pixmap at an arbitrary position instead of copying the contents of pixmaps at every level)
+- ~~set up benchmarking/profiling, experiment with alternative approaches and whether it makes any difference (recursively returning necessary dimensions and callback to render into a Pixmap at an arbitrary position instead of copying the contents of pixmaps at every level)~~: dealing with rendering callbacks instead of Pixmaps gave a ~10x speedup.
