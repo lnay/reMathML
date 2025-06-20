@@ -31,6 +31,82 @@ impl Default for ColorBrush {
     }
 }
 
+pub struct TextRenderer {
+    font_cx: FontContext,
+    layout_cx: LayoutContext<ColorBrush>,
+}
+
+impl TextRenderer {
+    pub fn new() -> Self {
+        // Create a FontContext, LayoutContext
+        //
+        // These are both intended to be constructed rarely (perhaps even once per app (or once per thread))
+        // and provide caches and scratch space to avoid allocations
+        let font_cx = FontContext::new();
+        let layout_cx = LayoutContext::new();
+        Self { font_cx, layout_cx }
+    }
+    pub fn render_text(&mut self, text: String, font_size: f32) -> Pixmap {
+        // The display scale for HiDPI rendering
+        let display_scale = 1.0;
+
+        // Create a RangedBuilder
+        let mut builder = self
+            .layout_cx
+            .ranged_builder(&mut self.font_cx, &text, display_scale);
+        // let mut builder = layout_cx.ranged_builder(font_cx, &text, display_scale);
+
+        // Set default text colour styles (set foreground text color)
+        builder.push_default(StyleProperty::Brush(ColorBrush {
+            color: Color::BLACK,
+        }));
+
+        // Set default font family
+        // builder.push_default(StyleProperty::FontStyle(parley::FontStyle::Italic));
+        // builder.push_default(GenericFamily::Math);
+        // builder.push_default(FontFamily::parse("TeX Gyre Pagella Math").unwrap());
+        // builder.push_default(FontFamily::parse("Libertinus Math").unwrap());
+        // builder.push_default(FontFamily::parse("Tex Gyre Termes Math").unwrap());
+        builder.push_default(FontFamily::parse("TexMaths Symbols").unwrap());
+        builder.push_default(StyleProperty::FontSize(font_size));
+
+        // Build the builder into a Layout
+        let mut layout: Layout<ColorBrush> = builder.build(&text);
+
+        // Perform layout (including bidi resolution and shaping) with start alignment
+        layout.break_all_lines(None);
+        let width = layout.width().ceil() as u32;
+        let height = layout.height().ceil() as u32;
+
+        // Create TinySkia Pixmap
+        let mut img = Pixmap::new(width, height).unwrap();
+
+        // Fill background color
+        img.fill(Color::WHITE);
+
+        // Wrap Pixmap in a type that implements skrifa::OutlinePen
+        let mut pen = TinySkiaPen::new(img.as_mut());
+
+        // Render each glyph run
+        for line in layout.lines() {
+            for item in line.items() {
+                match item {
+                    PositionedLayoutItem::GlyphRun(glyph_run) => {
+                        render_glyph_run(&glyph_run, &mut pen, 0);
+                    }
+                    // PositionedLayoutItem::InlineBox(inline_box) => {
+                    //     pen.set_origin(inline_box.x, inline_box.y);
+                    //     pen.set_color(foreground_color);
+                    //     pen.fill_rect(inline_box.width, inline_box.height);
+                    // }
+                    _ => {}
+                }
+            }
+        }
+        img
+    }
+}
+
 pub fn render_text(text: String, font_size: f32) -> Pixmap {
     // The display scale for HiDPI rendering
     let display_scale = 1.0;
@@ -51,7 +127,7 @@ pub fn render_text(text: String, font_size: f32) -> Pixmap {
 
     // Set default text colour styles (set foreground text color)
     let foreground_brush = ColorBrush {
-        color: foreground_color,
+        color: Color::BLACK,
     };
     let brush_style = StyleProperty::Brush(foreground_brush);
     builder.push_default(brush_style);

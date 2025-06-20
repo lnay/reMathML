@@ -4,57 +4,81 @@ use std::cmp::Ordering;
 
 use crate::mml_types::{Element, Mfrac, Mi, Mn, Mo, Mroot, Mrow, Msub, Msup, Mtext};
 use crate::mml_types::{mfrac, mi, mn, mo, mroot, mrow, msub, msup, mtext};
-use crate::text_rendering::render_text;
+use crate::text_rendering::{TextRenderer, render_text};
 use tiny_skia::{FillRule, IntRect, Paint, PathBuilder, Pixmap, PixmapPaint, Stroke, Transform};
 
 pub trait Render {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32);
-    fn render(&self, font_size: f32) -> Pixmap {
-        let (pixmap, _) = self.pixmap_with_baseline(font_size);
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32);
+    fn render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> Pixmap {
+        let (pixmap, _) = self.pixmap_with_baseline(text_renderer, font_size);
         pixmap
     }
 }
 
 impl Render for Mi {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
-        let pixmap = render_text(self.identifier.clone(), font_size);
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
+        let pixmap = text_renderer.render_text(self.identifier.clone(), font_size);
         let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
 
 impl Render for Mtext {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
-        let pixmap = render_text(self.text.clone(), font_size);
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
+        let pixmap = text_renderer.render_text(self.text.clone(), font_size);
         let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
 
 impl Render for Mn {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
-        let pixmap = render_text(self.number.clone(), font_size);
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
+        let pixmap = text_renderer.render_text(self.number.clone(), font_size);
         let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
 impl Render for Mo {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
-        let pixmap = render_text(self.operator.clone(), font_size);
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
+        let pixmap = text_renderer.render_text(self.operator.clone(), font_size);
         let y = pixmap.height() / 2;
         (pixmap, y)
     }
 }
 impl Render for Msup {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
         const SUPERSCRIPT_FONT_RATIO: f32 = 0.7;
         const SUPERSCRIPT_VERTICAL_OFFSET: f32 = 0.5;
-        let (base, y) = self.base.pixmap_with_baseline(font_size);
+        let (base, y) = self.base.pixmap_with_baseline(text_renderer, font_size);
         let (superscript, _) = self
             .superscript
-            .pixmap_with_baseline(font_size * SUPERSCRIPT_FONT_RATIO);
+            .pixmap_with_baseline(text_renderer, font_size * SUPERSCRIPT_FONT_RATIO);
         let width = base.width() + superscript.width();
         let height = base.height().max(superscript.height() * 2);
         let base_y_offset = 0.max(superscript.height() - base.height() / 2) as i32;
@@ -66,15 +90,19 @@ impl Render for Msup {
     }
 }
 impl Render for Msub {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
         const SUBSCRIPT_FONT_RATIO: f32 = 0.7;
         const SUPERSCRIPT_VERTICAL_OFFSET: f32 = 0.5;
-        let (base, y) = self.base.pixmap_with_baseline(font_size);
+        let (base, y) = self.base.pixmap_with_baseline(text_renderer, font_size);
         let (subscript, _) = self
             .subscript
-            .pixmap_with_baseline(font_size * SUBSCRIPT_FONT_RATIO);
+            .pixmap_with_baseline(text_renderer, font_size * SUBSCRIPT_FONT_RATIO);
         let width = base.width() + subscript.width();
         let height = base.height().max(2 * subscript.height());
         let mut pixmap = Pixmap::new(width, height).unwrap();
@@ -95,7 +123,11 @@ impl Render for Msub {
     }
 }
 impl Render for Mrow {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
         let spacing = (font_size / 10.0).floor() as u32;
@@ -103,7 +135,7 @@ impl Render for Mrow {
         let rendered_children = self
             .terms
             .iter()
-            .map(|child| child.pixmap_with_baseline(font_size))
+            .map(|child| child.pixmap_with_baseline(text_renderer, font_size))
             .collect::<Vec<_>>();
         let baseline = rendered_children.iter().map(|child| child.1).max().unwrap();
         let below_baseline = rendered_children
@@ -139,12 +171,20 @@ impl Render for Mrow {
     }
 }
 impl Render for Mfrac {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
         let paint = PixmapPaint::default();
         let transform = Transform::default();
         let line_width = (font_size / 25.0).ceil() as u32;
-        let (numerator, _) = self.numerator.pixmap_with_baseline(font_size);
-        let (denominator, _) = self.denominator.pixmap_with_baseline(font_size);
+        let (numerator, _) = self
+            .numerator
+            .pixmap_with_baseline(text_renderer, font_size);
+        let (denominator, _) = self
+            .denominator
+            .pixmap_with_baseline(text_renderer, font_size);
         let width = numerator.width().max(denominator.width());
         let term_height = numerator.height().max(denominator.height()) as u32;
         let height = (2 * term_height + line_width) as u32;
@@ -191,13 +231,17 @@ impl Render for Mfrac {
     }
 }
 impl Render for Mroot {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
         let paint = Paint::default();
         let pixmappaint = PixmapPaint::default();
         let transform = Transform::default();
         let line_width = (font_size / 25.0).ceil() as u32;
 
-        let (inner, inner_baseline) = self.base.pixmap_with_baseline(font_size);
+        let (inner, inner_baseline) = self.base.pixmap_with_baseline(text_renderer, font_size);
 
         let baseline = inner_baseline + line_width;
         let width = inner.width() + inner.height() / 2;
@@ -238,17 +282,21 @@ impl Render for Mroot {
     }
 }
 impl Render for Element {
-    fn pixmap_with_baseline(&self, font_size: f32) -> (Pixmap, u32) {
+    fn pixmap_with_baseline(
+        &self,
+        text_renderer: &mut TextRenderer,
+        font_size: f32,
+    ) -> (Pixmap, u32) {
         match self {
-            Element::Mi(mi) => mi.pixmap_with_baseline(font_size),
-            Element::Mn(mn) => mn.pixmap_with_baseline(font_size),
-            Element::Mo(mo) => mo.pixmap_with_baseline(font_size),
-            Element::Mtext(mtext) => mtext.pixmap_with_baseline(font_size),
-            Element::Msup(msup) => msup.pixmap_with_baseline(font_size),
-            Element::Msub(msub) => msub.pixmap_with_baseline(font_size),
-            Element::Mfrac(mfrac) => mfrac.pixmap_with_baseline(font_size),
-            Element::Mroot(mroot) => mroot.pixmap_with_baseline(font_size),
-            Element::Mrow(mrow) => mrow.pixmap_with_baseline(font_size),
+            Element::Mi(mi) => mi.pixmap_with_baseline(text_renderer, font_size),
+            Element::Mn(mn) => mn.pixmap_with_baseline(text_renderer, font_size),
+            Element::Mo(mo) => mo.pixmap_with_baseline(text_renderer, font_size),
+            Element::Mtext(mtext) => mtext.pixmap_with_baseline(text_renderer, font_size),
+            Element::Msup(msup) => msup.pixmap_with_baseline(text_renderer, font_size),
+            Element::Msub(msub) => msub.pixmap_with_baseline(text_renderer, font_size),
+            Element::Mfrac(mfrac) => mfrac.pixmap_with_baseline(text_renderer, font_size),
+            Element::Mroot(mroot) => mroot.pixmap_with_baseline(text_renderer, font_size),
+            Element::Mrow(mrow) => mrow.pixmap_with_baseline(text_renderer, font_size),
         }
     }
 }
@@ -258,6 +306,7 @@ mod tests {
     extern crate test;
     use super::*;
     use function_name::named;
+    use parley::swash::text;
     use test::Bencher;
 
     #[named]
@@ -266,7 +315,7 @@ mod tests {
         let whole = msup(msub(mi("β"), mi("α")), mn("2"));
         let font_size = 100.0;
 
-        let img = whole.render(font_size);
+        let img = whole.render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -278,7 +327,7 @@ mod tests {
         let fraction = mfrac(mi("α"), mi("β"));
         let font_size = 100.0;
 
-        let img = fraction.render(font_size);
+        let img = fraction.render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -290,7 +339,7 @@ mod tests {
         let fraction = mfrac(msub(mi("α"), mn("n")), mn("2"));
         let font_size = 100.0;
 
-        let img = fraction.render(font_size);
+        let img = fraction.render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -302,7 +351,7 @@ mod tests {
         let row = mrow(vec![mi("α"), mo("+"), mi("β")]);
         let font_size = 100.0;
 
-        let img = row.render(font_size);
+        let img = row.render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -314,7 +363,7 @@ mod tests {
         let row = mrow(vec![mi("x"), mo("+"), mfrac(mn("1"), mn("2"))]);
         let font_size = 100.0;
 
-        let img = row.render(font_size);
+        let img = row.render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -326,7 +375,7 @@ mod tests {
         let sqrt_2 = mroot(mn("2"), None);
         let font_size = 100.0;
 
-        let img = sqrt_2.render(font_size);
+        let img = sqrt_2.render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -358,7 +407,7 @@ mod tests {
                 mrow(vec![mn("2"), mi("a")]),
             ),
         ])
-        .render(font_size);
+        .render(&mut TextRenderer::new(), font_size);
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
@@ -390,7 +439,8 @@ mod tests {
                 mrow(vec![mn("2"), mi("a")]),
             ),
         ]);
+        let mut text_renderer = TextRenderer::new();
 
-        b.iter(|| expression.render(font_size));
+        b.iter(|| expression.render(&mut text_renderer, font_size));
     }
 }
