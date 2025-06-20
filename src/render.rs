@@ -204,58 +204,76 @@ impl Render for Mrow {
     }
 }
 
-// impl Render for Mfrac {
-//     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> (Pixmap, u32) {
-//         let paint = PixmapPaint::default();
-//         let transform = Transform::default();
-//         let line_width = (font_size / 25.0).ceil() as u32;
-//         let (numerator, _) = self.numerator.plan_render(text_renderer, font_size);
-//         let (denominator, _) = self.denominator.plan_render(text_renderer, font_size);
-//         let width = numerator.width().max(denominator.width());
-//         let term_height = numerator.height().max(denominator.height()) as u32;
-//         let height = (2 * term_height + line_width) as u32;
+impl Render for Mfrac {
+    fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
+        let paint = PixmapPaint::default();
+        let transform = Transform::default();
+        let line_width = (font_size / 25.0).ceil() as u32;
+        let RenderingPlan {
+            callback: numer_callback,
+            baseline: numer_baseline,
+            width: numer_width,
+            height: numer_height,
+        } = self.numerator.plan_render(text_renderer, font_size);
+        let RenderingPlan {
+            callback: denom_callback,
+            baseline: denom_baseline,
+            width: denom_width,
+            height: denom_height,
+        } = self.denominator.plan_render(text_renderer, font_size);
 
-//         let mut pixmap = Pixmap::new(width, height).unwrap();
+        let width = numer_width.max(denom_width);
+        let term_height = numer_height.max(denom_height);
+        let height = (2 * term_height + line_width);
 
-//         let (numerator_x_offset, denominator_x_offset) =
-//             match numerator.width().cmp(&denominator.width()) {
-//                 Ordering::Less => ((denominator.width() - numerator.width()) / 2, 0),
-//                 Ordering::Equal => (0, 0),
-//                 Ordering::Greater => (0, (numerator.width() - denominator.width()) / 2),
-//             };
+        let (numerator_x_offset, denominator_x_offset) = match numer_width.cmp(&denom_width) {
+            Ordering::Less => ((denom_width - numer_width) / 2, 0),
+            Ordering::Equal => (0, 0),
+            Ordering::Greater => (0, (numer_width - denom_width) / 2),
+        };
 
-//         pixmap.draw_pixmap(
-//             numerator_x_offset as i32,
-//             (term_height - numerator.height()) as i32,
-//             numerator.as_ref(),
-//             &paint,
-//             transform,
-//             None,
-//         );
-//         pixmap.draw_pixmap(
-//             denominator_x_offset as i32,
-//             (term_height + line_width) as i32,
-//             denominator.as_ref(),
-//             &paint,
-//             transform,
-//             None,
-//         );
-//         pixmap.fill_rect(
-//             IntRect::from_ltrb(
-//                 0,
-//                 term_height as i32,
-//                 width as i32,
-//                 (term_height + line_width) as i32,
-//             )
-//             .unwrap()
-//             .to_rect(),
-//             &Paint::default(),
-//             transform,
-//             None,
-//         );
-//         (pixmap, term_height + line_width / 2)
-//     }
-// }
+        let baseline = term_height + line_width / 2;
+
+        let callback = move |text_renderer: &mut TextRenderer,
+                             pixmap: &mut Pixmap,
+                             x_offset: u32,
+                             y_offset: u32| {
+            numer_callback(
+                text_renderer,
+                pixmap,
+                numerator_x_offset + x_offset,
+                (term_height - numer_height) + y_offset,
+            );
+            denom_callback(
+                text_renderer,
+                pixmap,
+                denominator_x_offset + x_offset,
+                (term_height + line_width) + y_offset,
+            );
+            pixmap.fill_rect(
+                IntRect::from_xywh(
+                    x_offset as i32,
+                    (y_offset + term_height) as i32,
+                    width,
+                    line_width,
+                )
+                .unwrap()
+                .to_rect(),
+                &Paint::default(),
+                transform,
+                None,
+            );
+        };
+
+        RenderingPlan {
+            callback: Box::new(callback),
+            baseline,
+            width,
+            height,
+        }
+    }
+}
+
 impl Render for Mroot {
     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
         let paint = Paint::default();
@@ -329,7 +347,7 @@ impl Render for Element {
             Element::Mtext(mtext) => mtext.plan_render(text_renderer, font_size),
             Element::Msup(msup) => msup.plan_render(text_renderer, font_size),
             Element::Msub(msub) => msub.plan_render(text_renderer, font_size),
-            Element::Mfrac(mfrac) => todo!("aoeu"), // mfrac.plan_render(text_renderer, font_size),
+            Element::Mfrac(mfrac) => mfrac.plan_render(text_renderer, font_size),
             Element::Mroot(mroot) => mroot.plan_render(text_renderer, font_size),
             Element::Mrow(mrow) => mrow.plan_render(text_renderer, font_size),
         }
