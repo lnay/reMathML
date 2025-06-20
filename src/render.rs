@@ -1,8 +1,8 @@
+#[allow(unused)]
+#[allow(dead_code)]
 use std::cmp::Ordering;
 
 use crate::mml_types::{Element, Mfrac, Mi, Mn, Mo, Mroot, Mrow, Msub, Msup, Mtext};
-#[allow(unused)]
-#[allow(dead_code)]
 use crate::mml_types::{mfrac, mi, mn, mo, mroot, mrow, msub, msup, mtext};
 use crate::text_rendering::render_text;
 use tiny_skia::{FillRule, IntRect, Paint, PathBuilder, Pixmap, PixmapPaint, Stroke, Transform};
@@ -255,8 +255,10 @@ impl Render for Element {
 
 #[cfg(test)]
 mod tests {
+    extern crate test;
     use super::*;
     use function_name::named;
+    use test::Bencher;
 
     #[named]
     #[test]
@@ -360,5 +362,35 @@ mod tests {
 
         img.save_png(format!("examples/{}.png", function_name!()))
             .unwrap();
+    }
+
+    #[named]
+    #[bench]
+    fn discriminant_bench(b: &mut Bencher) {
+        let font_size = 100.0;
+        let expression = mrow(vec![
+            mtext("roots"),
+            mo("="),
+            mfrac(
+                mrow(vec![
+                    mo("−"),
+                    mi("b"),
+                    mo("±"),
+                    mroot(
+                        mrow(vec![
+                            msup(mi("b"), mn("2")),
+                            mo("−"),
+                            mn("4"),
+                            mi("a"),
+                            mi("c"),
+                        ]),
+                        None,
+                    ),
+                ]),
+                mrow(vec![mn("2"), mi("a")]),
+            ),
+        ]);
+
+        b.iter(|| expression.render(font_size));
     }
 }
