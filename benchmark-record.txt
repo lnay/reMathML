@@ -3,3 +3,7 @@
 efaf014378b7b41ccd9a12d04077e83032ce5938
 test render::tests::discriminant_bench ... bench: 144,898,278.10 ns/iter (+/- 1,314,154.06)
 test render::tests::discriminant finished in 2.68s
+
+995a640b27ec3fb98c2aec9f353a7178565fc2bb Only initialize contexts for text rendering once
+test render::tests::discriminant_bench ... bench:   3,758,341.20 ns/iter (+/- 61,212.22)
+test render::tests::discriminant finished in 0.38s
