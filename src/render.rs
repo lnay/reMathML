@@ -2,7 +2,7 @@
 #[allow(dead_code)]
 use std::cmp::Ordering;
 
-use crate::mml_types::{Element, Mfrac, Mi, Mn, Mo, Mroot, Mrow, Msub, Msup, Mtext};
+use crate::mml_types::{Element, Mfrac, Mi, Mn, Mo, Mphantom, Mroot, Mrow, Msub, Msup, Mtext};
 use crate::mml_types::{mfrac, mi, mn, mo, mroot, mrow, msub, msup, mtext};
 use crate::text_rendering::{TextRenderer, render_text};
 use tiny_skia::{FillRule, IntRect, Paint, PathBuilder, Pixmap, PixmapPaint, Stroke, Transform};
@@ -218,6 +218,43 @@ impl Render for Mrow {
     }
 }
 
+impl Render for Mphantom {
+    fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
+        let children_render_plans = self
+            .terms
+            .iter()
+            .map(|child| child.plan_render(text_renderer, font_size))
+            .collect::<Vec<_>>();
+        let baseline = children_render_plans
+            .iter()
+            .map(|child| child.baseline)
+            .max()
+            .unwrap();
+        let below_baseline = children_render_plans
+            .iter()
+            .map(|child| child.height as i32 - baseline as i32)
+            .max()
+            .unwrap() as u32;
+        let width = children_render_plans
+            .iter()
+            .map(|child| child.width)
+            .sum::<u32>();
+        let height = baseline + below_baseline;
+
+        let callback = move |text_renderer: &mut TextRenderer,
+                             pixmap: &mut Pixmap,
+                             offset_x: u32,
+                             offset_y: u32| {};
+
+        RenderingPlan {
+            callback: Box::new(callback),
+            baseline,
+            width,
+            height,
+        }
+    }
+}
+
 impl Render for Mfrac {
     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
         let paint = PixmapPaint::default();
@@ -364,6 +401,7 @@ impl Render for Element {
             Element::Mfrac(mfrac) => mfrac.plan_render(text_renderer, font_size),
             Element::Mroot(mroot) => mroot.plan_render(text_renderer, font_size),
             Element::Mrow(mrow) => mrow.plan_render(text_renderer, font_size),
+            Element::Mphantom(mphantom) => mphantom.plan_render(text_renderer, font_size),
         }
     }
 }
@@ -371,6 +409,8 @@ impl Render for Element {
 #[cfg(test)]
 mod tests {
     extern crate test;
+    use crate::mml_types::mphantom;
+
     use super::*;
     use function_name::named;
     use parley::swash::text;
@@ -392,6 +432,18 @@ mod tests {
     #[test]
     fn beta_squared() {
         let whole = msup(mi("β"), mn("2"));
+        let font_size = 100.0;
+
+        let img = whole.render(&mut TextRenderer::new(), font_size);
+
+        img.save_png(format!("examples/{}.png", function_name!()))
+            .unwrap();
+    }
+
+    #[named]
+    #[test]
+    fn phantom_plus() {
+        let whole = mrow(vec![mi("β"), mphantom(vec![mo("+")]), mn("2")]);
         let font_size = 100.0;
 
         let img = whole.render(&mut TextRenderer::new(), font_size);

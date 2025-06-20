@@ -9,6 +9,9 @@ pub struct Math {
 pub struct Mrow {
     pub terms: Vec<Element>,
 }
+pub struct Mphantom {
+    pub terms: Vec<Element>,
+}
 pub struct Mi {
     pub identifier: String,
 }
@@ -59,7 +62,7 @@ pub enum Element {
     // Mstyle,
     // Merror,
     // Mpadded,
-    // Mphantom,
+    Mphantom(Mphantom),
     // Mfenced,
     // Menclose,
     // Msubsup,
@@ -78,6 +81,9 @@ pub enum Element {
 
 pub fn mrow(terms: Vec<Element>) -> Element {
     Element::Mrow(Mrow { terms })
+}
+pub fn mphantom(terms: Vec<Element>) -> Element {
+    Element::Mphantom(Mphantom { terms })
 }
 pub fn mi(identifier: &str) -> Element {
     let identifier = identifier.into();
