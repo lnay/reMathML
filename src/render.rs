@@ -147,50 +147,63 @@ impl Render for Msub {
         }
     }
 }
-// impl Render for Mrow {
-//     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> (Pixmap, u32) {
-//         let paint = PixmapPaint::default();
-//         let transform = Transform::default();
-//         let spacing = (font_size / 10.0).floor() as u32;
 
-//         let rendered_children = self
-//             .terms
-//             .iter()
-//             .map(|child| child.plan_render(text_renderer, font_size))
-//             .collect::<Vec<_>>();
-//         let baseline = rendered_children.iter().map(|child| child.1).max().unwrap();
-//         let below_baseline = rendered_children
-//             .iter()
-//             .map(|child| child.0.height() as i32 - baseline as i32)
-//             .max()
-//             .unwrap() as u32;
-//         let width = rendered_children
-//             .iter()
-//             .map(|child| child.0.width())
-//             .sum::<u32>()
-//             + spacing * (rendered_children.len() - 1) as u32;
-//         let height = baseline + below_baseline;
-//         let mut pixmap = Pixmap::new(width, height).unwrap();
+impl Render for Mrow {
+    fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> RenderingPlan {
+        let paint = PixmapPaint::default();
+        let transform = Transform::default();
+        let spacing = (font_size / 10.0).floor() as u32;
 
-//         let mut x = 0;
-//         rendered_children.iter().for_each(|child| {
-//             let (child_pixmap, child_baseline) = child;
-//             let child_width = child_pixmap.width();
-//             let y = baseline - child_baseline;
-//             pixmap.draw_pixmap(
-//                 x as i32,
-//                 y as i32,
-//                 child_pixmap.as_ref(),
-//                 &paint,
-//                 transform,
-//                 None,
-//             );
-//             x += child_width;
-//             x += spacing;
-//         });
-//         (pixmap, baseline)
-//     }
-// }
+        let children_render_plans = self
+            .terms
+            .iter()
+            .map(|child| child.plan_render(text_renderer, font_size))
+            .collect::<Vec<_>>();
+        let baseline = children_render_plans
+            .iter()
+            .map(|child| child.baseline)
+            .max()
+            .unwrap();
+        let below_baseline = children_render_plans
+            .iter()
+            .map(|child| child.height as i32 - baseline as i32)
+            .max()
+            .unwrap() as u32;
+        let width = children_render_plans
+            .iter()
+            .map(|child| child.width)
+            .sum::<u32>()
+            + spacing * (children_render_plans.len() - 1) as u32;
+        let height = baseline + below_baseline;
+
+        let callback = move |text_renderer: &mut TextRenderer,
+                             pixmap: &mut Pixmap,
+                             offset_x: u32,
+                             offset_y: u32| {
+            let mut offset_in_row = 0;
+            children_render_plans.iter().for_each(|child| {
+                let y = baseline - child.baseline;
+                let child_callback = &child.callback;
+                child_callback(
+                    text_renderer,
+                    pixmap,
+                    offset_in_row + offset_x,
+                    y + offset_y,
+                );
+                offset_in_row += child.width;
+                offset_in_row += spacing;
+            });
+        };
+
+        RenderingPlan {
+            callback: Box::new(callback),
+            baseline,
+            width,
+            height,
+        }
+    }
+}
+
 // impl Render for Mfrac {
 //     fn plan_render(&self, text_renderer: &mut TextRenderer, font_size: f32) -> (Pixmap, u32) {
 //         let paint = PixmapPaint::default();
@@ -318,7 +331,7 @@ impl Render for Element {
             Element::Msub(msub) => msub.plan_render(text_renderer, font_size),
             Element::Mfrac(mfrac) => todo!("aoeu"), // mfrac.plan_render(text_renderer, font_size),
             Element::Mroot(mroot) => mroot.plan_render(text_renderer, font_size),
-            Element::Mrow(mrow) => todo!("aoeu"), // mrow.plan_render(text_renderer, font_size),
+            Element::Mrow(mrow) => mrow.plan_render(text_renderer, font_size),
         }
     }
 }
