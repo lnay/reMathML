@@ -1,3 +1,8 @@
+> [!WARNING]
+> This was a quick and dirty proof of concept but I've found another project better suited to achieve the goals that this one was targetting: https://github.com/KenyC/ReX.
+> That other project has clear interfaces which could allow for the linebender ecosystem to be used as an alternative rendering backend.
+
+
 # MathML rendering
 
 Exploratory implementation of MathML rendering using [linebender](https://github.com/linebender) ecosystem (in particular tiny_skia and parley).
@@ -64,3 +69,4 @@ White background on all texts helps check alignments. Open image in new tab can 
 - xml parser, set up to testing with Temml, revisit if parts of the MathML standard ignored should stay ignored
 - consider whether CSS is necessary, could potentially use [simplecss](https://github.com/linebender/simplecss)
 - ~~set up benchmarking/profiling, experiment with alternative approaches and whether it makes any difference (recursively returning necessary dimensions and callback to render into a Pixmap at an arbitrary position instead of copying the contents of pixmaps at every level)~~: dealing with rendering callbacks instead of Pixmaps gave a ~10x speedup.
+- remove the parley dependency (skrifa should be enough)
